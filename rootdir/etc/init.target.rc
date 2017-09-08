@@ -1,0 +1,161 @@
+# Copyright (c) 2009-2012, 2014, The Linux Foundation. All rights reserved.
+# Copyright (c) 2015-2016 The CyanogenMod Project
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of The Linux Foundation nor
+#       the names of its contributors may be used to endorse or promote
+#       products derived from this software without specific prior written
+#       permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NON-INFRINGEMENT ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+on boot
+    # AK09912 driver parameter permissions
+    chown system compass /sys/class/compass/akm09912/accel
+    chmod 0660 /sys/class/compass/akm09912/accel
+    chown system compass /sys/class/compass/akm09912/delay_acc
+    chmod 0660 /sys/class/compass/akm09912/delay_acc
+    chown system compass /sys/class/compass/akm09912/enable_acc
+    chmod 0660 /sys/class/compass/akm09912/enable_acc
+    chown system compass /sys/class/compass/akm09912/delay_fusion
+    chmod 0660 /sys/class/compass/akm09912/delay_fusion
+    chown system compass /sys/class/compass/akm09912/enable_fusion
+    chmod 0660 /sys/class/compass/akm09912/enable_fusion
+    chown system compass /sys/class/compass/akm09912/delay_mag
+    chmod 0660 /sys/class/compass/akm09912/delay_mag
+    chown system compass /sys/class/compass/akm09912/enable_mag
+    chmod 0660 /sys/class/compass/akm09912/enable_mag
+
+    # Switch to interactive and let PowerHAL configure it
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor interactive
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/boostpulse
+    chmod 0644 /sys/devices/system/cpu/cpufreq/interactive/boostpulse
+    chown system system /sys/devices/system/cpu/cpu0/cpufreq/interactive/go_hispeed_load
+    chmod 0644 /sys/devices/system/cpu/cpu0/cpufreq/interactive/go_hispeed_load
+    chown system system /sys/devices/system/cpu/cpu0/cpufreq/interactive/hispeed_freq
+    chmod 0644 /sys/devices/system/cpu/cpu0/cpufreq/interactive/hispeed_freq
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/min_sample_time
+    chmod 0644 /sys/devices/system/cpu/cpufreq/interactive/min_sample_time
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/timer_rate
+    chmod 0644 /sys/devices/system/cpu/cpufreq/interactive/timer_rate
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/above_hispeed_delay
+    chmod 0644 /sys/devices/system/cpu/cpufreq/interactive/above_hispeed_delay
+    chown system system /sys/devices/system/cpu/cpufreq/interactive/target_loads
+    chmod 0644 /sys/devices/system/cpu/cpufreq/interactive/target_loads
+    chown system system /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+    chown system system /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+
+on post-fs-data
+    # AK09912 calibration file directory
+    mkdir /data/misc/akmd 0770 system compass
+
+# Start AKM executable
+service akmd09912 /system/bin/akmd09912
+    class main
+    user compass
+    group compass misc input
+
+# Start UnicornBlood changes
+# Many of these tweaks are thanks to AK, Franco,Nathan Chancellor & frap129.
+
+on property:sys.boot_completed=1
+    setprop sys.io.scheduler maple
+    write /sys/block/mmcblk0/queue/read_ahead_kb 512
+    write /sys/devices/soc.0/1c00000.qcom,kgsl-3d0/devfreq/1c00000.qcom,kgsl-3d0/governor msm-adreno-tz
+    write /sys/module/lpm_levels/parameters/sleep_disabled 0
+    write /sys/devices/system/cpu/cpu0/online 1
+
+    # Re-enable retention idle state
+    write /sys/module/lpm_levels/system/cpu0/retention/idle_enabled 1
+    write /sys/module/lpm_levels/system/cpu1/retention/idle_enabled 1
+    write /sys/module/lpm_levels/system/cpu2/retention/idle_enabled 1
+    write /sys/module/lpm_levels/system/cpu3/retention/idle_enabled 1
+    write /sys/module/lpm_levels/system/l2-retention/idle_enabled 1
+
+    # Disable some Wlan wakelocks
+    write /sys/module/wakeup/parameters/enable_wlan_rx_wake_ws 0
+    write /sys/module/wakeup/parameters/enable_wlan_ctrl_wake_ws 0
+    write /sys/module/wakeup/parameters/enable_wlan_wake_ws 0
+    write /sys/module/wakeup/parameters/enable_ipa_ws 0
+
+    # update foreground cpuset now that processors are up
+    # foreground gets all CPUs except CPU 3
+    # CPU 3 is reserved for the top app
+    write /dev/cpuset/foreground/cpus 0-2
+    write /dev/cpuset/foreground/boost/cpus 0-2
+    write /dev/cpuset/background/cpus 0
+    write /dev/cpuset/system-background/cpus 0-2
+    write /dev/cpuset/top-app/cpus 0-3
+
+    write /sys/module/lpm_levels/parameters/sleep_disabled 0
+    write /sys/devices/system/cpu/cpu0/online 1
+
+    # HMP scheduler settings
+    write /proc/sys/kernel/sched_ravg_hist_size 3
+    write /proc/sys/kernel/sched_window_stats_policy 3
+
+    # HMP Task packing settings for 8916
+    write /proc/sys/kernel/sched_small_task 50
+
+    # enable thermal core_control
+    write /sys/module/msm_thermal/core_control/enabled 1
+
+    start batt_health
+
+    # Initialize frequency hardlimits
+    chown system system /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq_hardlimit
+    chmod 0664 /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq_hardlimit
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq_hardlimit 200000
+    chown system system /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq_hardlimit
+    chmod 0664 /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq_hardlimit
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq_hardlimit 1363200
+
+    # Tune Governors: interactive
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor interactive
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 200000
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq 1363000
+    write /sys/module/cpu_boost/parameters/input_boost_enabled 1
+    write /sys/module/cpu_boost/parameters/input_boost_freq 0:800000 1:800000 2:800000 3:800000
+    write /sys/module/cpu_boost/parameters/boost_ms 0
+    write /sys/module/cpu_boost/parameters/input_boost_ms 40
+    write /sys/module/cpu_boost/parameters/migration_load_threshold 15
+    write /sys/module/cpu_boost/parameters/sync_threshold 0
+
+    # Set I/O Scheduler tweaks
+    write /sys/block/mmcblk0/queue/scheduler maple
+    write /sys/block/mmcblk0/queue/read_ahead_kb 512
+    write /sys/block/mmcblk0/queue/iosched/writes_starved 4
+    write /sys/block/mmcblk0/queue/iosched/fifo_batch 16
+    write /sys/block/mmcblk0/queue/iosched/sync_read_expire 350
+    write /sys/block/mmcblk0/queue/iosched/sync_write_expire 550
+    write /sys/block/mmcblk0/queue/iosched/async_read_expire 250
+    write /sys/block/mmcblk0/queue/iosched/async_write_expire 450
+    write /sys/block/mmcblk0/queue/iosched/sleep_latency_multiple 10
+
+    # configure hotplug
+    write /sys/module/cluster_plug/parameters/load_threshold_down 40
+    write /sys/module/cluster_plug/parameters/load_threshold_up 80
+    write /sys/module/cluster_plug/parameters/vote_threshold_down 6
+    write /sys/module/cluster_plug/parameters/vote_threshold_up 2
+    write /sys/module/cluster_plug/parameters/sampling_time 80
+
+    # LMK
+    write /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk 1
+    write /sys/module/lowmemorykiller/parameters/vmpressure_file_min 49152
