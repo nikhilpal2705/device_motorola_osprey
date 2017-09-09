@@ -1,13 +1,13 @@
 [
   {
-    "repository":   "DirtyUnicorns/android_device_motorola_msm8916-common",
+    "repository":   "nikhilpal2705/android_device_motorola_msm8916-common",
     "target_path":  "device/motorola/msm8916-common",
-    "branch":       "n7x-caf"
+    "branch":       "XOS-7.1"
   },
   {
-    "repository":   "DirtyUnicorns/android_kernel_motorola_msm8916",
+    "repository":   "nikhilpal2705/android_kernel_motorola_msm8916",
     "target_path":  "kernel/motorola/msm8916",
-    "branch":       "n7x-caf"
+    "branch":       "nougat-mr2"
   },
   {
     "repository":   "DirtyUnicorns/android_external_bson",
@@ -15,38 +15,8 @@
     "branch":       "n7x-caf"
   },
   {
-    "repository":   "DirtyUnicorns/android_hardware_qcom_audio",
-    "target_path":  "hardware/qcom/audio-caf/msm8916",
-    "branch":       "n7x-caf-8916"
-  },
-  {
-    "repository":   "DirtyUnicorns/android_hardware_qcom_display",
-    "target_path":  "hardware/qcom/display-caf/msm8916",
-    "branch":       "n7x-caf-8916"
-  },
-  {
-    "repository":   "DirtyUnicorns/android_hardware_qcom_media",
-    "target_path":  "hardware/qcom/media-caf/msm8916",
-    "branch":       "n7x-caf-8916"
-  },
-  {
-    "repository":   "DirtyUnicorns/android_hardware_qcom_fm",
-    "target_path":  "hardware/qcom/fm",
-    "branch":       "n7x-caf"
-  },
-  {
-    "repository":   "DirtyUnicorns/android_packages_apps_FMRadio",
-    "target_path":  "packages/apps/FMRadio",
-    "branch":       "n7x-caf"
-  },
-  {
-    "repository":   "DirtyUnicorns/android_system_qcom",
-    "target_path":  "system/qcom",
-    "branch":       "n7x-caf"
-  },
-  {
-    "repository":   "DirtyUnicorns/android_vendor_motorola",
+    "repository":   "nikhilpal2705/android_vendor_motorola",
     "target_path":  "vendor/motorola",
-    "branch":       "n7x-caf"
+    "branch":       "XOS-7.1"
   }
 ]
